@@ -1,10 +1,11 @@
 import { execFile } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import { promisify } from "node:util";
 import assert from "node:assert/strict";
 
 const execFileAsync = promisify(execFile);
-const cliPath = new URL("../src/index.js", import.meta.url);
+const cliPath = fileURLToPath(new URL("../src/index.js", import.meta.url));
 
 async function runCli(args = []) {
   return execFileAsync(process.execPath, [cliPath, ...args], {
