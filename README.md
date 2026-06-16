@@ -16,23 +16,26 @@ npm install
 
 ## Use
 
-Start by reading the product notes and running the local checks:
+The current CLI contract is intentionally small while the audit engine is still being built:
 
 ```sh
-sed -n '1,120p' docs/PRD.md
-npm test
+npx typoscope --help
+npx typoscope --version
 ```
 
-If you are evaluating the package contents before a release, run:
+Start deeper evaluation by reading the product notes and running the local checks:
 
 ```sh
+npm test
 npm run release:check
 ```
 
 ## Verification
 
 ```sh
+npm run build
 npm test
+npm run smoke
 npm run package:smoke
 npm run release:check
 ```
@@ -54,17 +57,5 @@ See [SECURITY.md](SECURITY.md). Do not include secrets, private tokens, propriet
 ## License
 
 MIT
-
-## Verification
-
-Run the release-readiness checks before publishing or cutting a PR:
-
-```bash
-npm run build
-npm run test
-npm run smoke
-npm run package:smoke
-npm run release:check
-```
 
 Use `npm run package:smoke` or `npm pack --dry-run` to confirm the published tarball includes the support docs and runnable package contents.
