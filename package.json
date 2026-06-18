@@ -1,7 +1,7 @@
 {
   "name": "typoscope",
   "version": "0.1.0",
-  "description": "Typoscope is a local-first TypeScript CLI that audits npm package.json dependencies for suspicious packages — typosquatting lookalikes,.",
+  "description": "Local-first npm dependency risk scanner for typosquatting, lifecycle scripts, and suspicious package metadata.",
   "type": "module",
   "main": "./src/index.js",
   "bin": {
@@ -23,7 +23,7 @@
     "test": "node --test",
     "smoke": "node src/index.js --help && npm run package:smoke",
     "package:smoke": "npm pack --dry-run",
-    "release:check": "npm test && npm run build && npm run smoke"
+    "release:check": "npm test && npm run build && npm run smoke && npm run package:smoke"
   },
   "keywords": [],
   "author": "Roger Chappel",

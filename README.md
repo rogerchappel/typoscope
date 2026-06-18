@@ -1,6 +1,6 @@
 # typoscope
 
-Typoscope is a local-first TypeScript CLI that audits npm package.json dependencies for suspicious packages — typosquatting lookalikes, deprecated/abandoned packages, packages with risky install scripts, and packages with suspicious permissions — maintaining a local safety index without any network calls.
+Typoscope is a local-first TypeScript CLI that audits npm package.json dependencies for suspicious packages, including typosquatting lookalikes, deprecated or abandoned packages, risky lifecycle scripts, and suspicious package metadata, while maintaining a local safety index without network calls.
 
 ## Status
 
