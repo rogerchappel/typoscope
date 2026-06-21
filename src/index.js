@@ -131,7 +131,12 @@ export function auditManifest(manifest, filePath = "package.json") {
 }
 
 function readManifest(filePath) {
-  return JSON.parse(readFileSync(filePath, "utf8"));
+  try {
+    return JSON.parse(readFileSync(filePath, "utf8"));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new Error(`Could not read ${filePath}: ${detail}`);
+  }
 }
 
 function formatReport(result) {
@@ -145,7 +150,7 @@ function formatReport(result) {
   ].join("\n");
 }
 
-export function run(argv = process.argv.slice(2), log = console.log) {
+export function run(argv = process.argv.slice(2), log = console.log, errorLog = console.error) {
   const [arg, target, ...rest] = argv;
 
   if (arg === "--version" || arg === "-v") {
@@ -155,7 +160,15 @@ export function run(argv = process.argv.slice(2), log = console.log) {
 
   if (arg === "audit") {
     const filePath = target ?? "package.json";
-    const result = auditManifest(readManifest(filePath), filePath);
+    let result;
+
+    try {
+      result = auditManifest(readManifest(filePath), filePath);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errorLog(`typoscope: ${message}`);
+      return 2;
+    }
 
     if (rest.includes("--json")) {
       log(JSON.stringify(result, null, 2));
