@@ -1,0 +1,10 @@
+typoscope
+
+Early-stage local-first TypeScript CLI scaffold.
+
+Usage:
+  typoscope --help
+  typoscope --version
+
+The implementation is intentionally minimal while the project is pre-1.0.
+See docs/PRD.md for planned scope.

@@ -1,11 +1,14 @@
 import { execFile } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import { promisify } from "node:util";
 import assert from "node:assert/strict";
+import { help, run, version } from "../src/index.js";
 
 const execFileAsync = promisify(execFile);
 const cliPath = fileURLToPath(new URL("../src/index.js", import.meta.url));
+const expectedHelp = `${(await readFile("test/fixtures/help.txt", "utf8")).trimEnd()}\n`;
 
 async function runCli(args = []) {
   return execFileAsync(process.execPath, [cliPath, ...args], {
@@ -18,17 +21,14 @@ describe("typoscope CLI scaffold", () => {
     const { stdout, stderr } = await runCli(["--help"]);
 
     assert.equal(stderr, "");
-    assert.match(stdout, /^typoscope\n/);
-    assert.match(stdout, /Usage:/);
-    assert.match(stdout, /typoscope --version/);
-    assert.match(stdout, /docs\/PRD\.md/);
+    assert.equal(stdout, expectedHelp);
   });
 
   it("prints the package version for --version", async () => {
     const { stdout, stderr } = await runCli(["--version"]);
 
     assert.equal(stderr, "");
-    assert.equal(stdout.trim(), "0.1.0");
+    assert.equal(stdout, `${version}\n`);
   });
 
   it("defaults to help text for unknown arguments while pre-1.0", async () => {
@@ -36,5 +36,16 @@ describe("typoscope CLI scaffold", () => {
 
     assert.equal(stderr, "");
     assert.match(stdout, /Early-stage local-first TypeScript CLI scaffold/);
+  });
+
+  it("emits help and version through the injectable runner", () => {
+    const lines = [];
+    const log = (line) => lines.push(line);
+
+    run([], log);
+    run(["--version"], log);
+    run(["-v"], log);
+
+    assert.deepEqual(lines, [help, version, version]);
   });
 });
