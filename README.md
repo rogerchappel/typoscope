@@ -4,7 +4,7 @@ Typoscope is a local-first TypeScript CLI that audits npm package.json dependenc
 
 ## Status
 
-This repository is early-stage. The README now reflects the current project intent from `docs/PRD.md`, but behavior should still be treated as pre-1.0 until implementation, examples, and release checks mature.
+This repository is early-stage, but it now includes a first-pass local `package.json` audit for suspicious dependency names and risky lifecycle scripts. Treat findings as review prompts, not a replacement for vulnerability databases or human supply-chain review.
 
 ## Install from a checkout
 
@@ -16,18 +16,18 @@ npm install
 
 ## Use
 
-The current CLI contract is intentionally small while the audit engine is still being built:
+Run the local manifest audit:
 
 ```sh
-npx typoscope --help
-npx typoscope --version
+npx typoscope audit package.json
 ```
 
-Start deeper evaluation by reading the product notes and running the local checks:
+The audit exits with status `0` when no findings are present and status `1` when it flags a dependency lookalike or risky install-time script.
+
+For CI or agent workflows, emit JSON:
 
 ```sh
-npm test
-npm run release:check
+npx typoscope audit package.json --json
 ```
 
 ## Verification
@@ -42,9 +42,10 @@ npm run release:check
 
 ## Limitations
 
-- The package is still a v0.1.0 project and may not expose a finished CLI or public API yet.
+- The package is still a v0.1.0 project and only exposes a small first-pass audit.
 - Treat the PRD as direction, not a guarantee that every listed capability is implemented.
-- Do not use the package for production security, compliance, or release decisions until tests and examples cover that workflow.
+- The checker uses local heuristics only; it does not call npm, Snyk, OSV, or any vulnerability database.
+- Do not use the package as the sole source for production security, compliance, or release decisions.
 
 ## Contributing
 
