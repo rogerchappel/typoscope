@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import { promisify } from "node:util";
 import assert from "node:assert/strict";
+import { help, run, version } from "../src/index.js";
 
 const execFileAsync = promisify(execFile);
 const cliPath = fileURLToPath(new URL("../src/index.js", import.meta.url));
@@ -31,7 +32,7 @@ describe("typoscope CLI scaffold", () => {
     const { stdout, stderr } = await runCli(["--version"]);
 
     assert.equal(stderr, "");
-    assert.equal(stdout.trim(), "0.1.0");
+    assert.equal(stdout, `${version}\n`);
   });
 
   it("defaults to help text for unknown arguments", async () => {
@@ -107,5 +108,16 @@ describe("typoscope CLI scaffold", () => {
         return true;
       },
     );
+  });
+
+  it("emits help and version through the injectable runner", () => {
+    const lines = [];
+    const log = (line) => lines.push(line);
+
+    run([], log);
+    run(["--version"], log);
+    run(["-v"], log);
+
+    assert.deepEqual(lines, [help, version, version]);
   });
 });

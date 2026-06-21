@@ -2,10 +2,11 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const version = "0.1.0";
+export const version = "0.1.0";
 
-const help = `typoscope
+export const help = `typoscope
 
 Local-first package.json risk scanner for suspicious npm dependency names and scripts.
 
@@ -144,11 +145,11 @@ function formatReport(result) {
   ].join("\n");
 }
 
-function run(argv) {
+export function run(argv = process.argv.slice(2), log = console.log) {
   const [arg, target, ...rest] = argv;
 
   if (arg === "--version" || arg === "-v") {
-    console.log(version);
+    log(version);
     return 0;
   }
 
@@ -157,18 +158,18 @@ function run(argv) {
     const result = auditManifest(readManifest(filePath), filePath);
 
     if (rest.includes("--json")) {
-      console.log(JSON.stringify(result, null, 2));
+      log(JSON.stringify(result, null, 2));
     } else {
-      console.log(formatReport(result));
+      log(formatReport(result));
     }
 
     return result.ok ? 0 : 1;
   }
 
-  console.log(help);
+  log(help);
   return 0;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   process.exitCode = run(process.argv.slice(2));
 }

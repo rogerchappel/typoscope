@@ -9,6 +9,7 @@ format and uses semantic versioning when versioned releases are published.
 
 ### Added
 
+- Added fixture-backed CLI scaffold coverage for the current help/version commands.
 - Initial project setup.
 
 ## Release Links
