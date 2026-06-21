@@ -110,6 +110,39 @@ describe("typoscope CLI scaffold", () => {
     );
   });
 
+  it("reports malformed package manifests without a stack trace", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "typoscope-invalid-"));
+    const manifestPath = path.join(dir, "package.json");
+    await writeFile(manifestPath, "{ not json");
+
+    await assert.rejects(
+      runCli(["audit", manifestPath]),
+      (error) => {
+        assert.equal(error.code, 2);
+        assert.equal(error.stdout, "");
+        assert.match(error.stderr, /^typoscope: Could not read /);
+        assert.doesNotMatch(error.stderr, /SyntaxError|at JSON\.parse/);
+        return true;
+      },
+    );
+  });
+
+  it("reports missing package manifests without a stack trace", async () => {
+    const missingPath = path.join(tmpdir(), "typoscope-missing-package.json");
+
+    await assert.rejects(
+      runCli(["audit", missingPath]),
+      (error) => {
+        assert.equal(error.code, 2);
+        assert.equal(error.stdout, "");
+        assert.match(error.stderr, /^typoscope: Could not read /);
+        assert.match(error.stderr, /ENOENT/);
+        assert.doesNotMatch(error.stderr, /\n\s+at /);
+        return true;
+      },
+    );
+  });
+
   it("emits help and version through the injectable runner", () => {
     const lines = [];
     const log = (line) => lines.push(line);
