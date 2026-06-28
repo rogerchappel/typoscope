@@ -30,6 +30,20 @@ For CI or agent workflows, emit JSON:
 npx typoscope audit package.json --json
 ```
 
+## Demo
+
+Run the checked-in fixtures without network access:
+
+```sh
+bash demo/run-package-risk-audit.sh
+```
+
+The demo scans `examples/clean-package.json`, then verifies that
+`examples/risky-package.json` reports a dependency lookalike and risky
+install-time script findings. See
+[Local Package Risk Audit](docs/tutorials/local-package-risk-audit.md) for the
+walkthrough.
+
 ## Verification
 
 ```sh
