@@ -42,7 +42,8 @@ The demo scans `examples/clean-package.json`, then verifies that
 `examples/risky-package.json` reports a dependency lookalike and risky
 install-time script findings. See
 [Local Package Risk Audit](docs/tutorials/local-package-risk-audit.md) for the
-walkthrough.
+walkthrough and [docs/promo/video-brief-package-risk-audit.md](docs/promo/video-brief-package-risk-audit.md)
+for a short recording outline.
 
 ## Verification
 
