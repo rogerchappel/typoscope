@@ -45,6 +45,15 @@ install-time script findings. See
 walkthrough and [docs/promo/video-brief-package-risk-audit.md](docs/promo/video-brief-package-risk-audit.md)
 for a short recording outline.
 
+For a CI-style package manifest gate that writes JSON evidence:
+
+```sh
+bash demo/ci-package-risk-gate.sh
+```
+
+See [docs/tutorials/ci-package-risk-gate.md](docs/tutorials/ci-package-risk-gate.md)
+for the fixture behavior and expected report.
+
 ## Verification
 
 ```sh
