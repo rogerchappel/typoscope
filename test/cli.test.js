@@ -153,4 +153,15 @@ describe("typoscope CLI scaffold", () => {
 
     assert.deepEqual(lines, [help, version, version]);
   });
+
+  it("can be imported when the process has no CLI entrypoint", async () => {
+    const { stdout, stderr } = await execFileAsync(
+      process.execPath,
+      ["--input-type=module", "-e", "import('./src/index.js').then(({ version }) => console.log(version))"],
+      { cwd: fileURLToPath(new URL("..", import.meta.url)), encoding: "utf8" },
+    );
+
+    assert.equal(stderr, "");
+    assert.equal(stdout, `${version}\n`);
+  });
 });

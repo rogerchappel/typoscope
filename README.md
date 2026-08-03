@@ -6,7 +6,18 @@ Typoscope is a local-first TypeScript CLI that audits npm package.json dependenc
 
 This repository is early-stage, but it now includes a first-pass local `package.json` audit for suspicious dependency names and risky lifecycle scripts. Treat findings as review prompts, not a replacement for vulnerability databases or human supply-chain review.
 
-## Install from a checkout
+## Install
+
+After the first registry release, install from the explicit
+`@rogerchappel/typoscope` scope so npm never falls back to the unrelated
+unscoped `typoscope` package:
+
+```sh
+npm install --global @rogerchappel/typoscope
+typoscope audit package.json
+```
+
+To work from a checkout instead:
 
 ```sh
 git clone https://github.com/rogerchappel/typoscope.git
@@ -19,7 +30,7 @@ npm install
 Run the local manifest audit:
 
 ```sh
-npx typoscope audit package.json
+npx --yes @rogerchappel/typoscope audit package.json
 ```
 
 The audit exits with status `0` when no findings are present and status `1` when it flags a dependency lookalike or risky install-time script.
@@ -27,7 +38,7 @@ The audit exits with status `0` when no findings are present and status `1` when
 For CI or agent workflows, emit JSON:
 
 ```sh
-npx typoscope audit package.json --json
+npx --yes @rogerchappel/typoscope audit package.json --json
 ```
 
 ## Demo
@@ -59,6 +70,7 @@ for the fixture behavior and expected report.
 ```sh
 npm run build
 npm test
+npm run package:name-check
 npm run smoke
 npm run package:smoke
 npm run release:check

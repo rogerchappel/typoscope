@@ -34,6 +34,20 @@ try {
     stdio: ["ignore", "pipe", "inherit"],
   });
 
+  assertIncludes(
+    execFileSync(
+      process.execPath,
+      [
+        "--input-type=module",
+        "-e",
+        "import(process.argv[1]).then(({ version }) => console.log(version))",
+        packageJson.name,
+      ],
+      { cwd: tmp, encoding: "utf8" },
+    ),
+    packageJson.version,
+  );
+
   const bin = join(tmp, "node_modules", ".bin", "typoscope");
   assertIncludes(execFileSync(bin, ["--help"], { encoding: "utf8" }), "typoscope audit <package.json>");
   assertIncludes(execFileSync(bin, ["--version"], { encoding: "utf8" }), packageJson.version);
