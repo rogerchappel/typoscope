@@ -183,6 +183,18 @@ export function run(argv = process.argv.slice(2), log = console.log, errorLog = 
   return 0;
 }
 
-if (realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+function isDirectExecution(entrypoint = process.argv[1]) {
+  if (!entrypoint) {
+    return false;
+  }
+
+  try {
+    return realpathSync(entrypoint) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+}
+
+if (isDirectExecution()) {
   process.exitCode = run(process.argv.slice(2));
 }
