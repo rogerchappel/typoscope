@@ -1,5 +1,5 @@
 {
-  "name": "typoscope",
+  "name": "@rogerchappel/typoscope",
   "version": "0.1.0",
   "description": "Local-first npm dependency risk scanner for typosquatting, lifecycle scripts, and suspicious package metadata.",
   "type": "module",
@@ -22,8 +22,9 @@
     "build": "node --check src/index.js",
     "test": "node --test",
     "smoke": "node src/index.js --help && npm run package:smoke",
+    "package:name-check": "node scripts/check-package-name.mjs",
     "package:smoke": "node scripts/package-smoke.mjs",
-    "release:check": "npm test && npm run build && npm run smoke && npm run package:smoke"
+    "release:check": "npm run package:name-check && npm test && npm run build && npm run smoke"
   },
   "keywords": [
     "npm",
@@ -34,6 +35,9 @@
   ],
   "author": "Roger Chappel",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=20"
   },
