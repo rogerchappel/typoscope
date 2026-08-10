@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, writeFile } from "node:fs/promises";
+import { access, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +10,7 @@ import { help, run, version } from "../src/index.js";
 
 const execFileAsync = promisify(execFile);
 const cliPath = fileURLToPath(new URL("../src/index.js", import.meta.url));
+const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 
 async function runCli(args = []) {
   return execFileAsync(process.execPath, [cliPath, ...args], {
@@ -163,5 +164,23 @@ describe("typoscope CLI scaffold", () => {
 
     assert.equal(stderr, "");
     assert.equal(stdout, `${version}\n`);
+  });
+
+  it("keeps documented demo commands from generating checkout artifacts", async () => {
+    const demoReport = path.join(repoRoot, ".typoscope-risk-report.json");
+    const ciReport = path.join(repoRoot, ".typoscope-ci-risk-report.json");
+
+    await execFileAsync("bash", ["demo/run-package-risk-audit.sh"], { cwd: repoRoot });
+    await execFileAsync("bash", ["demo/ci-package-risk-gate.sh"], { cwd: repoRoot });
+
+    await assert.rejects(access(demoReport), { code: "ENOENT" });
+    await assert.rejects(access(ciReport), { code: "ENOENT" });
+
+    const outputDir = await mkdtemp(path.join(tmpdir(), "typoscope-ci-report-"));
+    const retainedReport = path.join(outputDir, "risk-report.json");
+    await execFileAsync("bash", ["demo/ci-package-risk-gate.sh", retainedReport], {
+      cwd: repoRoot,
+    });
+    assert.match(await readFile(retainedReport, "utf8"), /"package": "expres"/);
   });
 });
