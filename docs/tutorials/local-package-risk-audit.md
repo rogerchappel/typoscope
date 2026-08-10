@@ -30,8 +30,9 @@ Expected result: Typoscope exits `1` and reports review prompts for:
 bash demo/run-package-risk-audit.sh
 ```
 
-The demo verifies the clean manifest, captures the risky JSON report in
-`.typoscope-risk-report.json`, and checks for the expected finding codes.
+The demo verifies the clean manifest, captures the risky JSON in a temporary
+report, and checks for the expected finding codes. It removes the report on
+exit so running the documented command does not generate checkout artifacts.
 
 ## Where this fits
 
