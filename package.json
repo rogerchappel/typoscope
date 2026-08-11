@@ -24,6 +24,7 @@
     "smoke": "node src/index.js --help && npm run package:smoke",
     "package:name-check": "node scripts/check-package-name.mjs",
     "package:smoke": "node scripts/package-smoke.mjs",
+    "lockfile:check": "npm install --package-lock-only --ignore-scripts && git diff --exit-code -- package-lock.json && npm ci --ignore-scripts",
     "release:check": "npm run package:name-check && npm test && npm run build && npm run smoke"
   },
   "keywords": [
