@@ -10,8 +10,13 @@ bash demo/ci-package-risk-gate.sh
 ```
 
 The script first audits `examples/clean-package.json`, then scans
-`examples/ci-risky-package.json` with `--json` and writes
-`.typoscope-ci-risk-report.json`.
+`examples/ci-risky-package.json` with `--json`. By default it validates a
+temporary report and removes it on exit, leaving the checkout clean. To retain
+the JSON evidence, pass an output path:
+
+```sh
+bash demo/ci-package-risk-gate.sh ./risk-report.json
+```
 
 ## Fixture behavior
 

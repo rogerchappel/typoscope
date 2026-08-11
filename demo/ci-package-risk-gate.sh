@@ -2,7 +2,12 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-out_json="${1:-"$repo_root/.typoscope-ci-risk-report.json"}"
+if [ "$#" -gt 0 ]; then
+  out_json="$1"
+else
+  out_json="$(mktemp "${TMPDIR:-/tmp}/typoscope-ci-risk-report.XXXXXX.json")"
+  trap 'rm -f "$out_json"' EXIT
+fi
 
 cd "$repo_root"
 
@@ -24,4 +29,8 @@ grep -q '"package": "expres"' "$out_json"
 grep -q '"code": "risky-lifecycle-script"' "$out_json"
 grep -q '"code": "suspicious-script-command"' "$out_json"
 
-echo "typoscope CI package gate wrote $out_json"
+if [ "$#" -gt 0 ]; then
+  echo "typoscope CI package gate wrote $out_json"
+else
+  echo "typoscope CI package gate validated a temporary JSON report"
+fi

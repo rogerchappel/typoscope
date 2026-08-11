@@ -4,6 +4,9 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
+report_path="$(mktemp "${TMPDIR:-/tmp}/typoscope-risk-report.XXXXXX.json")"
+trap 'rm -f "$report_path"' EXIT
+
 node src/index.js audit examples/clean-package.json
 
 set +e
@@ -17,10 +20,10 @@ if [ "$risky_status" -ne 1 ]; then
   exit 1
 fi
 
-printf '%s\n' "$risky_output" > .typoscope-risk-report.json
+printf '%s\n' "$risky_output" > "$report_path"
 
-grep -q '"code": "dependency-lookalike"' .typoscope-risk-report.json
-grep -q '"code": "risky-lifecycle-script"' .typoscope-risk-report.json
-grep -q '"code": "suspicious-script-command"' .typoscope-risk-report.json
+grep -q '"code": "dependency-lookalike"' "$report_path"
+grep -q '"code": "risky-lifecycle-script"' "$report_path"
+grep -q '"code": "suspicious-script-command"' "$report_path"
 
-echo "typoscope demo ok: wrote .typoscope-risk-report.json"
+echo "typoscope demo ok: validated a temporary JSON report"

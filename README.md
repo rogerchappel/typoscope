@@ -51,7 +51,8 @@ bash demo/run-package-risk-audit.sh
 
 The demo scans `examples/clean-package.json`, then verifies that
 `examples/risky-package.json` reports a dependency lookalike and risky
-install-time script findings. See
+install-time script findings. Its temporary JSON report is removed before the
+command exits, so the checkout stays clean. See
 [Local Package Risk Audit](docs/tutorials/local-package-risk-audit.md) for the
 walkthrough and [docs/promo/video-brief-package-risk-audit.md](docs/promo/video-brief-package-risk-audit.md)
 for a short recording outline.
@@ -61,6 +62,10 @@ For a CI-style package manifest gate that writes JSON evidence:
 ```sh
 bash demo/ci-package-risk-gate.sh
 ```
+
+The default command validates a temporary report and removes it on exit. Pass
+an output path to retain the JSON evidence, for example
+`bash demo/ci-package-risk-gate.sh ./risk-report.json`.
 
 See [docs/tutorials/ci-package-risk-gate.md](docs/tutorials/ci-package-risk-gate.md)
 for the fixture behavior and expected report.
