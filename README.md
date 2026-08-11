@@ -22,7 +22,7 @@ To work from a checkout instead:
 ```sh
 git clone https://github.com/rogerchappel/typoscope.git
 cd typoscope
-npm install
+npm ci
 ```
 
 ## Use
@@ -75,6 +75,13 @@ npm run smoke
 npm run package:smoke
 npm run release:check
 ```
+
+The committed `package-lock.json` is the dependency contract for development,
+CI, release previews, and tagged releases. Use `npm ci` for a clean,
+reproducible install. After intentionally changing `package.json`, run
+`npm install` to update the lockfile and commit both files. Maintainers can run
+`npm run lockfile:check` to verify that the lockfile is synchronized and that a
+clean install succeeds without lifecycle scripts.
 
 ## Limitations
 
