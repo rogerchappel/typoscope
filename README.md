@@ -35,6 +35,12 @@ npx --yes @rogerchappel/typoscope audit package.json
 
 The audit exits with status `0` when no findings are present and status `1` when it flags a dependency lookalike or risky install-time script.
 
+The local dependency-name heuristic compares each package name (or the final
+name segment of a scoped package) with a small built-in catalogue. It flags one
+insertion, deletion, substitution, or adjacent-character transposition, while
+exact catalogue matches remain clean. Each dependency entry produces at most
+one lookalike finding.
+
 For CI or agent workflows, emit JSON:
 
 ```sh
