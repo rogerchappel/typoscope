@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import { promisify } from "node:util";
 import assert from "node:assert/strict";
-import { help, run, version } from "../src/index.js";
+import { auditManifest, help, run, version } from "../src/index.js";
 
 const execFileAsync = promisify(execFile);
 const cliPath = fileURLToPath(new URL("../src/index.js", import.meta.url));
@@ -82,6 +82,53 @@ describe("typoscope CLI scaffold", () => {
       (error) => {
         assert.match(error.stdout, /dependency-lookalike/);
         assert.match(error.stdout, /lodas looks similar to lodash/);
+        return true;
+      },
+    );
+  });
+
+  it("recognizes an adjacent transposition once without flagging clean or unrelated names", () => {
+    const result = auditManifest({
+      dependencies: {
+        lodahs: "^1.0.0",
+        lodash: "^4.17.21",
+        leftpad: "^1.0.0",
+      },
+    });
+
+    assert.equal(result.ok, false);
+    assert.deepEqual(result.findings, [
+      {
+        level: "critical",
+        code: "dependency-lookalike",
+        package: "lodahs",
+        section: "dependencies",
+        message: "lodahs looks similar to lodash.",
+      },
+    ]);
+  });
+
+  it("reports adjacent transpositions through the JSON CLI", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "typoscope-transposition-"));
+    const manifestPath = path.join(dir, "package.json");
+    await writeFile(
+      manifestPath,
+      JSON.stringify({
+        dependencies: {
+          lodahs: "^1.0.0",
+        },
+      }),
+    );
+
+    await assert.rejects(
+      runCli(["audit", manifestPath, "--json"]),
+      (error) => {
+        const report = JSON.parse(error.stdout);
+        assert.equal(report.ok, false);
+        assert.equal(report.findings.length, 1);
+        assert.equal(report.findings[0].code, "dependency-lookalike");
+        assert.equal(report.findings[0].package, "lodahs");
+        assert.equal(report.findings[0].message, "lodahs looks similar to lodash.");
         return true;
       },
     );
