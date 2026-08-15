@@ -41,6 +41,11 @@ For CI or agent workflows, emit JSON:
 npx --yes @rogerchappel/typoscope audit package.json --json
 ```
 
+Options may appear before or after the manifest path, so `audit --json
+package.json` is equivalent. Omit the path to audit `package.json` in the
+current directory. Unknown commands, options, and extra paths exit with status
+`2` and print a concise diagnostic to stderr.
+
 ## Demo
 
 Run the checked-in fixtures without network access:

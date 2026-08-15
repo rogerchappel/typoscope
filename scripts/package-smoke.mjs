@@ -49,7 +49,7 @@ try {
   );
 
   const bin = join(tmp, "node_modules", ".bin", "typoscope");
-  assertIncludes(execFileSync(bin, ["--help"], { encoding: "utf8" }), "typoscope audit <package.json>");
+  assertIncludes(execFileSync(bin, ["--help"], { encoding: "utf8" }), "typoscope audit [package.json]");
   assertIncludes(execFileSync(bin, ["--version"], { encoding: "utf8" }), packageJson.version);
   assertIncludes(
     execFileSync(bin, ["audit", join(process.cwd(), "package.json")], {
