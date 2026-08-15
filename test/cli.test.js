@@ -26,7 +26,7 @@ describe("typoscope CLI scaffold", () => {
     assert.match(stdout, /^typoscope\n/);
     assert.match(stdout, /Usage:/);
     assert.match(stdout, /typoscope --version/);
-    assert.match(stdout, /typoscope audit <package\.json>/);
+    assert.match(stdout, /typoscope audit \[package\.json\]/);
   });
 
   it("prints the package version for --version", async () => {
@@ -36,11 +36,24 @@ describe("typoscope CLI scaffold", () => {
     assert.equal(stdout, `${version}\n`);
   });
 
-  it("defaults to help text for unknown arguments", async () => {
-    const { stdout, stderr } = await runCli(["--audit", "package.json"]);
+  it("rejects unknown commands and options as usage errors", async () => {
+    for (const args of [["scan"], ["--audit", "package.json"], ["audit", "--yaml"]]) {
+      await assert.rejects(runCli(args), (error) => {
+        assert.equal(error.code, 2);
+        assert.equal(error.stdout, "");
+        assert.match(error.stderr, /^typoscope: Unknown (?:command or option|option): /);
+        return true;
+      });
+    }
+  });
 
-    assert.equal(stderr, "");
-    assert.match(stdout, /Local-first package\.json risk scanner/);
+  it("rejects extra audit operands", async () => {
+    await assert.rejects(runCli(["audit", "package.json", "other.json"]), (error) => {
+      assert.equal(error.code, 2);
+      assert.equal(error.stdout, "");
+      assert.equal(error.stderr, "typoscope: audit accepts at most one package.json path\n");
+      return true;
+    });
   });
 
   it("passes a package manifest without suspicious dependencies or lifecycle scripts", async () => {
@@ -109,6 +122,29 @@ describe("typoscope CLI scaffold", () => {
         return true;
       },
     );
+
+    await assert.rejects(
+      runCli(["audit", "--json", manifestPath]),
+      (error) => {
+        assert.equal(error.code, 1);
+        assert.equal(error.stderr, "");
+        assert.equal(JSON.parse(error.stdout).ok, false);
+        return true;
+      },
+    );
+  });
+
+  it("uses package.json by default with --json before any operand", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "typoscope-default-"));
+    await writeFile(path.join(dir, "package.json"), JSON.stringify({ dependencies: { react: "^19.0.0" } }));
+
+    const { stdout, stderr } = await execFileAsync(process.execPath, [cliPath, "audit", "--json"], {
+      cwd: dir,
+      encoding: "utf8",
+    });
+
+    assert.equal(stderr, "");
+    assert.equal(JSON.parse(stdout).ok, true);
   });
 
   it("reports malformed package manifests without a stack trace", async () => {
@@ -153,6 +189,16 @@ describe("typoscope CLI scaffold", () => {
     run(["-v"], log);
 
     assert.deepEqual(lines, [help, version, version]);
+  });
+
+  it("rejects extra values after help and version flags", () => {
+    for (const args of [["--help", "extra"], ["--version", "extra"], ["-v", "extra"]]) {
+      const output = [];
+      const errors = [];
+      assert.equal(run(args, (line) => output.push(line), (line) => errors.push(line)), 2);
+      assert.deepEqual(output, []);
+      assert.match(errors[0], /^typoscope: Unknown command or option: /);
+    }
   });
 
   it("can be imported when the process has no CLI entrypoint", async () => {
