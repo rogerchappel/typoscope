@@ -46,23 +46,35 @@ const riskyScriptPatterns = [
 ];
 
 function distance(left, right) {
-  const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
+  let previousPrevious;
+  let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
 
   for (let i = 0; i < left.length; i += 1) {
     const current = [i + 1];
 
     for (let j = 0; j < right.length; j += 1) {
       const substitutionCost = left[i] === right[j] ? 0 : 1;
-      current.push(
-        Math.min(
-          previous[j + 1] + 1,
-          current[j] + 1,
-          previous[j] + substitutionCost,
-        ),
+      let editDistance = Math.min(
+        previous[j + 1] + 1,
+        current[j] + 1,
+        previous[j] + substitutionCost,
       );
+
+      if (
+        previousPrevious
+        && i > 0
+        && j > 0
+        && left[i] === right[j - 1]
+        && left[i - 1] === right[j]
+      ) {
+        editDistance = Math.min(editDistance, previousPrevious[j - 1] + 1);
+      }
+
+      current.push(editDistance);
     }
 
-    previous.splice(0, previous.length, ...current);
+    previousPrevious = previous;
+    previous = current;
   }
 
   return previous[right.length];
