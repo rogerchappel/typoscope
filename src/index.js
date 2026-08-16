@@ -13,7 +13,7 @@ Local-first package.json risk scanner for suspicious npm dependency names and sc
 Usage:
   typoscope --help
   typoscope --version
-  typoscope audit <package.json> [--json]
+  typoscope audit [package.json] [--json]
 
 The first audit pass runs without network access and flags common typosquatting lookalikes plus risky lifecycle scripts.`;
 
@@ -151,15 +151,33 @@ function formatReport(result) {
 }
 
 export function run(argv = process.argv.slice(2), log = console.log, errorLog = console.error) {
-  const [arg, target, ...rest] = argv;
+  const [arg, ...args] = argv;
 
-  if (arg === "--version" || arg === "-v") {
+  if (argv.length === 0 || (arg === "--help" && args.length === 0)) {
+    log(help);
+    return 0;
+  }
+
+  if ((arg === "--version" || arg === "-v") && args.length === 0) {
     log(version);
     return 0;
   }
 
   if (arg === "audit") {
-    const filePath = target ?? "package.json";
+    const operands = args.filter((value) => value !== "--json");
+    const unknownOption = operands.find((value) => value.startsWith("-"));
+
+    if (unknownOption) {
+      errorLog(`typoscope: Unknown option: ${unknownOption}`);
+      return 2;
+    }
+
+    if (operands.length > 1) {
+      errorLog("typoscope: audit accepts at most one package.json path");
+      return 2;
+    }
+
+    const filePath = operands[0] ?? "package.json";
     let result;
 
     try {
@@ -170,7 +188,7 @@ export function run(argv = process.argv.slice(2), log = console.log, errorLog = 
       return 2;
     }
 
-    if (rest.includes("--json")) {
+    if (args.includes("--json")) {
       log(JSON.stringify(result, null, 2));
     } else {
       log(formatReport(result));
@@ -179,8 +197,8 @@ export function run(argv = process.argv.slice(2), log = console.log, errorLog = 
     return result.ok ? 0 : 1;
   }
 
-  log(help);
-  return 0;
+  errorLog(`typoscope: Unknown command or option: ${arg}`);
+  return 2;
 }
 
 function isDirectExecution(entrypoint = process.argv[1]) {
