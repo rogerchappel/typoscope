@@ -1,6 +1,8 @@
 # typoscope
 
-Typoscope is a local-first TypeScript CLI that audits npm package.json dependencies for suspicious packages, including typosquatting lookalikes, deprecated or abandoned packages, risky lifecycle scripts, and suspicious package metadata, while maintaining a local safety index without network calls.
+Typoscope is a local-first JavaScript CLI that performs a small first-pass npm
+`package.json` audit for dependency names resembling popular packages and for
+risky lifecycle scripts, without network calls.
 
 ## Status
 
@@ -51,6 +53,10 @@ Options may appear before or after the manifest path, so `audit --json
 package.json` is equivalent. Omit the path to audit `package.json` in the
 current directory. Unknown commands, options, and extra paths exit with status
 `2` and print a concise diagnostic to stderr.
+
+The manifest root, dependency sections, and `scripts` section must be JSON
+objects. Dependency ranges and inspected lifecycle script values must be
+strings. Invalid shapes also exit with status `2` and a concise diagnostic.
 
 ## Demo
 

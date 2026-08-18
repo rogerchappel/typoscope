@@ -45,6 +45,39 @@ const riskyScriptPatterns = [
   { pattern: /rm\s+-rf\s+(?:\/|\$HOME|~)/i, reason: "removes broad filesystem paths" },
 ];
 
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function validateManifest(manifest) {
+  if (!isPlainObject(manifest)) {
+    throw new Error("Invalid package.json: root must be a JSON object.");
+  }
+
+  for (const section of dependencySections) {
+    const dependencies = manifest[section];
+    if (dependencies === undefined) continue;
+    if (!isPlainObject(dependencies)) {
+      throw new Error(`Invalid package.json: ${section} must be a JSON object.`);
+    }
+    for (const [name, range] of Object.entries(dependencies)) {
+      if (typeof range !== "string") {
+        throw new Error(`Invalid package.json: ${section}.${name} must be a string.`);
+      }
+    }
+  }
+
+  if (manifest.scripts !== undefined && !isPlainObject(manifest.scripts)) {
+    throw new Error("Invalid package.json: scripts must be a JSON object.");
+  }
+  for (const scriptName of riskyScriptNames) {
+    const command = manifest.scripts?.[scriptName];
+    if (command !== undefined && typeof command !== "string") {
+      throw new Error(`Invalid package.json: scripts.${scriptName} must be a string.`);
+    }
+  }
+}
+
 function distance(left, right) {
   let previousPrevious;
   let previous = Array.from({ length: right.length + 1 }, (_, index) => index);
@@ -89,6 +122,7 @@ function packageNameOnly(name) {
 }
 
 export function auditManifest(manifest, filePath = "package.json") {
+  validateManifest(manifest);
   const findings = [];
 
   for (const section of dependencySections) {
