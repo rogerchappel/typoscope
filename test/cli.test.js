@@ -211,6 +211,51 @@ describe("typoscope CLI scaffold", () => {
     );
   });
 
+  it("rejects invalid manifest shapes through auditManifest", () => {
+    const cases = [
+      [null, "root must be a JSON object"],
+      [[], "root must be a JSON object"],
+      [{ dependencies: null }, "dependencies must be a JSON object"],
+      [{ devDependencies: [] }, "devDependencies must be a JSON object"],
+      [{ optionalDependencies: { chalk: null } }, "optionalDependencies.chalk must be a string"],
+      [{ peerDependencies: { react: ["19"] } }, "peerDependencies.react must be a string"],
+      [{ scripts: null }, "scripts must be a JSON object"],
+      [{ scripts: [] }, "scripts must be a JSON object"],
+      [{ scripts: { postinstall: false } }, "scripts.postinstall must be a string"],
+    ];
+
+    for (const [manifest, diagnostic] of cases) {
+      assert.throws(
+        () => auditManifest(manifest),
+        (error) => error.message === `Invalid package.json: ${diagnostic}.`,
+      );
+    }
+  });
+
+  it("reports invalid manifest shapes as concise CLI usage errors", async () => {
+    const cases = [
+      [null, "root must be a JSON object"],
+      [[], "root must be a JSON object"],
+      [{ dependencies: ["expres"] }, "dependencies must be a JSON object"],
+      [{ dependencies: { expres: 1 } }, "dependencies.expres must be a string"],
+      [{ scripts: "postinstall" }, "scripts must be a JSON object"],
+      [{ scripts: { install: ["node", "install.js"] } }, "scripts.install must be a string"],
+    ];
+
+    const dir = await mkdtemp(path.join(tmpdir(), "typoscope-shapes-"));
+    for (const [index, [manifest, diagnostic]] of cases.entries()) {
+      const manifestPath = path.join(dir, `${index}.json`);
+      await writeFile(manifestPath, JSON.stringify(manifest));
+      await assert.rejects(runCli(["audit", manifestPath]), (error) => {
+        assert.equal(error.code, 2);
+        assert.equal(error.stdout, "");
+        assert.equal(error.stderr, `typoscope: Invalid package.json: ${diagnostic}.\n`);
+        assert.doesNotMatch(error.stderr, /TypeError|\n\s+at /);
+        return true;
+      });
+    }
+  });
+
   it("reports missing package manifests without a stack trace", async () => {
     const missingPath = path.join(tmpdir(), "typoscope-missing-package.json");
 
