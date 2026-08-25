@@ -113,14 +113,6 @@ function distance(left, right) {
   return previous[right.length];
 }
 
-function packageNameOnly(name) {
-  if (!name.startsWith("@")) {
-    return name;
-  }
-
-  return name.split("/").at(-1) ?? name;
-}
-
 export function auditManifest(manifest, filePath = "package.json") {
   validateManifest(manifest);
   const findings = [];
@@ -128,8 +120,11 @@ export function auditManifest(manifest, filePath = "package.json") {
   for (const section of dependencySections) {
     const dependencies = manifest[section] ?? {};
     for (const name of Object.keys(dependencies)) {
-      const bareName = packageNameOnly(name);
-      const match = popularPackages.find((popular) => popular !== bareName && distance(bareName, popular) <= 1);
+      if (name.startsWith("@")) {
+        continue;
+      }
+
+      const match = popularPackages.find((popular) => popular !== name && distance(name, popular) <= 1);
 
       if (match) {
         findings.push({
