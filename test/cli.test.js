@@ -27,6 +27,7 @@ describe("typoscope CLI scaffold", () => {
     assert.match(stdout, /Usage:/);
     assert.match(stdout, /typoscope --version/);
     assert.match(stdout, /typoscope audit \[package\.json\]/);
+    assert.match(stdout, /Scoped names remain within their own namespace/);
   });
 
   it("prints the package version for --version", async () => {

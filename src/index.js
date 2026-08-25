@@ -15,7 +15,8 @@ Usage:
   typoscope --version
   typoscope audit [package.json] [--json]
 
-The first audit pass runs without network access and flags common typosquatting lookalikes plus risky lifecycle scripts.`;
+The first audit pass runs without network access and flags common unscoped typosquatting lookalikes plus risky lifecycle scripts.
+Scoped names remain within their own namespace and are not compared with unscoped packages.`;
 
 const popularPackages = [
   "axios",
