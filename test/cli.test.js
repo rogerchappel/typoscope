@@ -27,6 +27,7 @@ describe("typoscope CLI scaffold", () => {
     assert.match(stdout, /Usage:/);
     assert.match(stdout, /typoscope --version/);
     assert.match(stdout, /typoscope audit \[package\.json\]/);
+    assert.match(stdout, /Scoped names remain within their own namespace/);
   });
 
   it("prints the package version for --version", async () => {
@@ -98,6 +99,39 @@ describe("typoscope CLI scaffold", () => {
         return true;
       },
     );
+  });
+
+  it("keeps scoped dependency namespaces separate from unscoped packages", () => {
+    const result = auditManifest({
+      dependencies: { "@acme/reactt": "1.0.0" },
+      devDependencies: { "@tools/lodashh": "1.0.0" },
+      optionalDependencies: { "@vendor/expres": "1.0.0" },
+      peerDependencies: { "@example/vitte": "1.0.0" },
+    });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.findings, []);
+  });
+
+  it("reports clean scoped dependencies through text and JSON CLI output", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "typoscope-scoped-"));
+    const manifestPath = path.join(dir, "package.json");
+    await writeFile(
+      manifestPath,
+      JSON.stringify({
+        dependencies: { "@acme/reactt": "1.0.0" },
+        devDependencies: { "@tools/lodashh": "1.0.0" },
+      }),
+    );
+
+    const text = await runCli(["audit", manifestPath]);
+    const json = await runCli(["audit", manifestPath, "--json"]);
+
+    assert.equal(text.stderr, "");
+    assert.match(text.stdout, /found no package\.json risk findings/);
+    assert.equal(json.stderr, "");
+    assert.equal(JSON.parse(json.stdout).ok, true);
+    assert.deepEqual(JSON.parse(json.stdout).findings, []);
   });
 
   it("recognizes an adjacent transposition once without flagging clean or unrelated names", () => {
