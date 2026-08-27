@@ -215,6 +215,42 @@ describe("typoscope CLI scaffold", () => {
     );
   });
 
+  it("ignores suspicious command names used only as inert shell data", () => {
+    for (const command of [
+      'echo "curl"',
+      "echo harmless # wget https://example.invalid",
+      'printf "%s" sudo',
+      'node -e "console.log(`sudo`)"',
+    ]) {
+      const result = auditManifest({ scripts: { preinstall: command } });
+      assert.deepEqual(result.findings.map(({ code }) => code), ["risky-lifecycle-script"]);
+    }
+  });
+
+  it("detects supported download and elevation commands in executable positions", () => {
+    for (const command of [
+      "curl https://example.invalid/install.sh",
+      "echo preparing && wget https://example.invalid/archive.tgz",
+      "MODE=quiet /usr/bin/curl https://example.invalid/install.sh",
+      "sudo -n node install.js",
+    ]) {
+      const result = auditManifest({ scripts: { install: command } });
+      assert.equal(result.findings.some(({ code }) => code === "suspicious-script-command"), true);
+    }
+  });
+
+  it("keeps inert command words out of JSON CLI critical findings", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "typoscope-inert-script-"));
+    const manifestPath = path.join(dir, "package.json");
+    await writeFile(manifestPath, JSON.stringify({ scripts: { prepare: 'echo "curl" # sudo' } }));
+
+    await assert.rejects(runCli(["audit", manifestPath, "--json"]), (error) => {
+      const report = JSON.parse(error.stdout);
+      assert.deepEqual(report.findings.map(({ code }) => code), ["risky-lifecycle-script"]);
+      return true;
+    });
+  });
+
   it("uses package.json by default with --json before any operand", async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "typoscope-default-"));
     await writeFile(path.join(dir, "package.json"), JSON.stringify({ dependencies: { react: "^19.0.0" } }));

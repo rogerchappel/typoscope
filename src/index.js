@@ -40,11 +40,64 @@ const dependencySections = [
 
 const riskyScriptNames = ["preinstall", "install", "postinstall", "prepare"];
 const riskyScriptPatterns = [
-  { pattern: /\bcurl\b|\bwget\b/i, reason: "downloads remote content" },
-  { pattern: /\bsudo\b/i, reason: "requests elevated privileges" },
   { pattern: /chmod\s+777/i, reason: "loosens file permissions" },
   { pattern: /rm\s+-rf\s+(?:\/|\$HOME|~)/i, reason: "removes broad filesystem paths" },
 ];
+
+function shellCommandNames(command) {
+  const segments = [];
+  let words = [];
+  let word = "";
+  let quote = null;
+
+  const finishWord = () => {
+    if (word) words.push(word);
+    word = "";
+  };
+  const finishSegment = () => {
+    finishWord();
+    if (words.length) segments.push(words);
+    words = [];
+  };
+
+  for (let index = 0; index < command.length; index += 1) {
+    const character = command[index];
+    if (quote) {
+      if (character === quote) quote = null;
+      else if (character === "\\" && quote === '"' && index + 1 < command.length) word += command[++index];
+      else word += character;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+    } else if (character === "#" && word === "") {
+      finishSegment();
+      while (index + 1 < command.length && command[index + 1] !== "\n") index += 1;
+    } else if (/\s/.test(character)) {
+      finishWord();
+    } else if (character === ";" || character === "|" || character === "&" || character === "\n") {
+      finishSegment();
+      if ((character === "|" || character === "&") && command[index + 1] === character) index += 1;
+    } else {
+      word += character;
+    }
+  }
+  finishSegment();
+
+  const names = new Set();
+  for (const segment of segments) {
+    let index = 0;
+    while (index < segment.length && /^[A-Za-z_][A-Za-z0-9_]*=/.test(segment[index])) index += 1;
+    while (index < segment.length) {
+      const name = path.posix.basename(segment[index]);
+      names.add(name.toLowerCase());
+      if (name !== "sudo" && name !== "command" && name !== "env") break;
+      index += 1;
+      while (index < segment.length && (segment[index].startsWith("-") || /^[A-Za-z_][A-Za-z0-9_]*=/.test(segment[index]))) index += 1;
+    }
+  }
+  return names;
+}
 
 function isPlainObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -152,6 +205,24 @@ export function auditManifest(manifest, filePath = "package.json") {
       script: scriptName,
       message: `${scriptName} runs during installation or packaging.`,
     });
+
+    const commandNames = shellCommandNames(command);
+    if (commandNames.has("curl") || commandNames.has("wget")) {
+      findings.push({
+        level: "critical",
+        code: "suspicious-script-command",
+        script: scriptName,
+        message: `${scriptName} downloads remote content.`,
+      });
+    }
+    if (commandNames.has("sudo")) {
+      findings.push({
+        level: "critical",
+        code: "suspicious-script-command",
+        script: scriptName,
+        message: `${scriptName} requests elevated privileges.`,
+      });
+    }
 
     for (const { pattern, reason } of riskyScriptPatterns) {
       if (pattern.test(command)) {
