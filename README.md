@@ -37,6 +37,12 @@ npx --yes @rogerchappel/typoscope audit package.json
 
 The audit exits with status `0` when no findings are present and status `1` when it flags a dependency lookalike or risky install-time script.
 
+Suspicious `curl`, `wget`, and `sudo` claims use a first-pass shell command-context
+scan. Command positions separated by common shell operators are recognized, while
+quoted strings, comments, and arguments to commands such as `echo`, `printf`, and
+`node -e` are treated as data. This is not a complete shell parser, so unusual shell
+syntax should still be reviewed manually.
+
 The local dependency-name heuristic compares unscoped package names with a
 small built-in catalogue. It flags one insertion, deletion, substitution, or
 adjacent-character transposition, while exact catalogue matches remain clean.
