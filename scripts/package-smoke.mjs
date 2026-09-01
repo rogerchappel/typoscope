@@ -4,6 +4,23 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+const releaseboxConfig = JSON.parse(readFileSync("releasebox.config.json", "utf8"));
+const readme = readFileSync("README.md", "utf8");
+
+if (releaseboxConfig.release?.publishNpm === false) {
+  const currentReadme = readme.replace(
+    /^### Future registry installation\n[\s\S]*?(?=^## |^### |\z)/m,
+    "",
+  );
+  const registryCommand = /^(?:npx\s+[^\n]*@rogerchappel\/typoscope|npm install[^\n]*@rogerchappel\/typoscope)/m;
+  if (registryCommand.test(currentReadme)) {
+    console.error(
+      "Package smoke failed; npm publishing is disabled but README advertises a registry command as current usage.",
+    );
+    process.exit(1);
+  }
+}
+
 const output = execFileSync("npm", ["pack", "--json"], {
   encoding: "utf8",
   stdio: ["ignore", "pipe", "inherit"],
