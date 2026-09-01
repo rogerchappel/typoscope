@@ -10,7 +10,19 @@ This repository is early-stage, but it now includes a first-pass local `package.
 
 ## Install
 
-After the first registry release, install from the explicit
+Typoscope is currently distributed from this source repository and through
+GitHub releases; it is not published to the npm registry. Install its locked
+development dependencies from a checkout:
+
+```sh
+git clone https://github.com/rogerchappel/typoscope.git
+cd typoscope
+npm ci
+```
+
+### Future registry installation
+
+If npm publishing is enabled in a future release, install from the explicit
 `@rogerchappel/typoscope` scope so npm never falls back to the unrelated
 unscoped `typoscope` package:
 
@@ -19,20 +31,12 @@ npm install --global @rogerchappel/typoscope
 typoscope audit package.json
 ```
 
-To work from a checkout instead:
-
-```sh
-git clone https://github.com/rogerchappel/typoscope.git
-cd typoscope
-npm ci
-```
-
 ## Use
 
-Run the local manifest audit:
+From the source checkout, run the local manifest audit:
 
 ```sh
-npx --yes @rogerchappel/typoscope audit package.json
+node ./src/index.js audit package.json
 ```
 
 The audit exits with status `0` when no findings are present and status `1` when it flags a dependency lookalike or risky install-time script.
@@ -53,7 +57,7 @@ finding.
 For CI or agent workflows, emit JSON:
 
 ```sh
-npx --yes @rogerchappel/typoscope audit package.json --json
+node ./src/index.js audit package.json --json
 ```
 
 Options may appear before or after the manifest path, so `audit --json
