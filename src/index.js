@@ -49,6 +49,7 @@ function shellCommandNames(command) {
   let words = [];
   let word = "";
   let quote = null;
+  let malformed = false;
 
   const finishWord = () => {
     if (word) words.push(word);
@@ -64,11 +65,14 @@ function shellCommandNames(command) {
     const character = command[index];
     if (quote) {
       if (character === quote) quote = null;
-      else if (character === "\\" && quote === '"' && index + 1 < command.length) word += command[++index];
+      else if (character === "\\" && index + 1 < command.length && /["\\$`]/.test(command[index + 1])) word += command[++index];
       else word += character;
       continue;
     }
-    if (character === "'" || character === '"') {
+    if (character === "\\") {
+      if (index + 1 < command.length) word += command[++index];
+      else malformed = true;
+    } else if (character === "'" || character === '"') {
       quote = character;
     } else if (character === "#" && word === "") {
       finishSegment();
@@ -82,6 +86,7 @@ function shellCommandNames(command) {
       word += character;
     }
   }
+  if (quote) malformed = true;
   finishSegment();
 
   const names = new Set();
@@ -96,7 +101,7 @@ function shellCommandNames(command) {
       while (index < segment.length && (segment[index].startsWith("-") || /^[A-Za-z_][A-Za-z0-9_]*=/.test(segment[index]))) index += 1;
     }
   }
-  return names;
+  return { names, malformed };
 }
 
 function isPlainObject(value) {
@@ -206,7 +211,15 @@ export function auditManifest(manifest, filePath = "package.json") {
       message: `${scriptName} runs during installation or packaging.`,
     });
 
-    const commandNames = shellCommandNames(command);
+    const { names: commandNames, malformed } = shellCommandNames(command);
+    if (malformed) {
+      findings.push({
+        level: "critical",
+        code: "suspicious-script-command",
+        script: scriptName,
+        message: `${scriptName} contains malformed shell quoting or escaping; review the command manually.`,
+      });
+    }
     if (commandNames.has("curl") || commandNames.has("wget")) {
       findings.push({
         level: "critical",

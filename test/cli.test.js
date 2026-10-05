@@ -239,6 +239,18 @@ describe("typoscope CLI scaffold", () => {
     }
   });
 
+  it("does not split escaped shell separators and flags malformed quoting conservatively", () => {
+    const escaped = auditManifest({ scripts: { install: "echo harmless \\; curl https://example.invalid/install.sh" } });
+    assert.equal(escaped.findings.some(({ code }) => code === "suspicious-script-command"), false);
+
+    for (const command of ['echo "unfinished curl', "echo unfinished\\"]) {
+      const result = auditManifest({ scripts: { install: command } });
+      const finding = result.findings.find(({ code }) => code === "suspicious-script-command");
+      assert.equal(finding?.level, "critical");
+      assert.match(finding.message, /malformed shell quoting or escaping/);
+    }
+  });
+
   it("keeps inert command words out of JSON CLI critical findings", async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "typoscope-inert-script-"));
     const manifestPath = path.join(dir, "package.json");
