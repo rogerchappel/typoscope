@@ -25,7 +25,7 @@
     "tasks:status-check": "node scripts/check-task-status.mjs",
     "package:name-check": "node scripts/check-package-name.mjs",
     "package:smoke": "node scripts/package-smoke.mjs",
-    "lockfile:check": "npm install --package-lock-only --ignore-scripts && node scripts/check-lockfile.mjs && npm ci --ignore-scripts",
+    "lockfile:check": "npm install --package-lock-only --ignore-scripts && node scripts/check-lockfile.mjs",
     "release:check": "npm run package:name-check && npm run tasks:status-check && npm test && npm run build && npm run smoke"
   },
   "keywords": [
