@@ -20,6 +20,6 @@
   before implementing the PRD's `--update-index` workflow.
 - Design allowlist configuration and precedence for the planned `--allowlist`
   workflow, then add fixtures and CLI coverage with the implementation.
-- Evaluate lockfile inputs separately from the implemented manifest audit;
-  [`docs/PRD.md`](PRD.md) lists lockfile auditing as planned scope, not current
-  behavior.
+- No lockfile audit is planned: [`docs/PRD.md`](PRD.md) explicitly limits the
+  audit input to `package.json`. Repository lockfiles remain dependency
+  management artifacts, not Typoscope audit inputs.
