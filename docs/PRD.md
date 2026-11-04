@@ -19,7 +19,7 @@ Supply chain attacks via npm typosquatting are common. Developers install a pack
 
 ## Goals
 
-- Audit `package.json` (and optionally `package-lock.json`/`pnpm-lock.yaml`) against a local ruleset
+- Audit `package.json` against a local ruleset
 - Typosquatting detection: fuzzy-match dependency names against a curated list of popular/npm-top packages
 - Risky script detection: flag packages with `install`, `preinstall`, `postinstall`, or `prepare` scripts
 - Permission warnings: flag packages referencing `sudo`, `chmod 777`, or other dangerous patterns in scripts
@@ -32,8 +32,8 @@ Supply chain attacks via npm typosquatting are common. Developers install a pack
 
 ## Non-goals
 
+- Lockfile auditing, dependency resolution, or dependency tree solving. Lockfiles are currently used only as the reproducible dependency contract for this repository's development and release checks; they are not inputs to Typoscope's package-risk audit.
 - Real-time network vulnerability scanning (use `npm audit` or Snyk for that)
-- Lockfile resolution or dependency tree solving
 - Replacing npm audit (complements it)
 
 ## Source attribution
