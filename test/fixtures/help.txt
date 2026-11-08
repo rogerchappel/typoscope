@@ -1,10 +1,11 @@
 typoscope
 
-Early-stage local-first TypeScript CLI scaffold.
+Local-first package.json risk scanner for suspicious npm dependency names and scripts.
 
 Usage:
   typoscope --help
   typoscope --version
+  typoscope audit [package.json] [--json]
 
-The implementation is intentionally minimal while the project is pre-1.0.
-See docs/PRD.md for planned scope.
+The first audit pass runs without network access and flags common unscoped typosquatting lookalikes plus risky lifecycle scripts.
+Scoped names remain within their own namespace and are not compared with unscoped packages.
