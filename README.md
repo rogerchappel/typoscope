@@ -48,11 +48,15 @@ quoted strings, comments, and arguments to commands such as `echo`, `printf`, an
 syntax should still be reviewed manually.
 
 The local dependency-name heuristic compares unscoped package names with a
-small built-in catalogue. It flags one insertion, deletion, substitution, or
-adjacent-character transposition, while exact catalogue matches remain clean.
-Scoped names stay within their own namespace and are not compared with the
-unscoped catalogue. Each dependency entry produces at most one lookalike
-finding.
+small, fixed built-in catalogue of ten names: `axios`, `chalk`, `commander`,
+`eslint`, `express`, `lodash`, `next`, `react`, `typescript`, and `vite`. This
+is a bounded starter set, not a comprehensive or continuously updated npm
+catalogue; names outside it are not covered by lookalike detection. Scanning
+stays offline and deterministic: no registry lookup or catalogue refresh occurs.
+The heuristic flags one insertion, deletion, substitution, or adjacent-character
+transposition, while exact catalogue matches remain clean. Scoped names stay
+within their own namespace and are not compared with this unscoped catalogue.
+Each dependency entry produces at most one lookalike finding.
 
 For CI or agent workflows, emit JSON:
 
