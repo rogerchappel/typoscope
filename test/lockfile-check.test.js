@@ -48,6 +48,40 @@ test('rejects inconsistent lockfile metadata', () => {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
+test('accepts synchronized root dependency sections', () => {
+  const dir = fixture();
+  try {
+    const packagePath = join(dir, 'package.json');
+    const lockPath = join(dir, 'package-lock.json');
+    const pkg = JSON.parse(readFileSync(packagePath));
+    const lock = JSON.parse(readFileSync(lockPath));
+    pkg.dependencies = { example: '^1.0.0' };
+    lock.packages[''].dependencies = { example: '^1.0.0' };
+    writeFileSync(packagePath, JSON.stringify(pkg));
+    writeFileSync(lockPath, JSON.stringify(lock));
+    assert.equal(check(dir).status, 0);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('rejects omitted or changed root dependency sections', () => {
+  for (const locked of [undefined, { example: '^2.0.0' }]) {
+    const dir = fixture();
+    try {
+      const packagePath = join(dir, 'package.json');
+      const lockPath = join(dir, 'package-lock.json');
+      const pkg = JSON.parse(readFileSync(packagePath));
+      const lock = JSON.parse(readFileSync(lockPath));
+      pkg.dependencies = { example: '^1.0.0' };
+      if (locked !== undefined) lock.packages[''].dependencies = locked;
+      writeFileSync(packagePath, JSON.stringify(pkg));
+      writeFileSync(lockPath, JSON.stringify(lock));
+      const result = check(dir);
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /root dependencies does not match/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  }
+});
+
 test('rejects malformed package entries', () => {
   const dir = fixture();
   try {
