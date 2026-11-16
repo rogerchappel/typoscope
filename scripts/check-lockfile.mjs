@@ -6,6 +6,12 @@ try {
   if (lock.lockfileVersion !== 3 || lock.name !== packageJson.name || lock.version !== packageJson.version || lock.packages?.['']?.name !== packageJson.name || lock.packages?.['']?.version !== packageJson.version || !lock.packages || typeof lock.packages !== 'object') {
     throw new Error('package metadata does not match package.json or lockfile structure is invalid');
   }
+  const rootPackage = lock.packages[''];
+  for (const section of ['dependencies', 'optionalDependencies', 'devDependencies', 'peerDependencies']) {
+    if (JSON.stringify(rootPackage[section] ?? {}) !== JSON.stringify(packageJson[section] ?? {})) {
+      throw new Error(`root ${section} does not match package.json`);
+    }
+  }
   for (const [path, entry] of Object.entries(lock.packages)) {
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)) throw new Error(`invalid package entry: ${path}`);
     if (path && !path.startsWith('node_modules/')) throw new Error(`invalid package path: ${path}`);
