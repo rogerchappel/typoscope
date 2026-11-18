@@ -26,7 +26,7 @@
     "package:name-check": "node scripts/check-package-name.mjs",
     "package:smoke": "node scripts/package-smoke.mjs",
     "lockfile:check": "node scripts/check-lockfile.mjs",
-    "release:check": "npm run package:name-check && npm run tasks:status-check && npm test && npm run build && npm run smoke"
+    "release:check": "npm run package:name-check && npm run tasks:status-check && npm run lockfile:check && npm test && npm run build && npm run smoke"
   },
   "keywords": [
     "npm",
