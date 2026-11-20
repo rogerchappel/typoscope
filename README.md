@@ -140,3 +140,11 @@ See [SECURITY.md](SECURITY.md). Do not include secrets, private tokens, propriet
 MIT
 
 Use `npm run package:smoke` or `npm pack --dry-run` to confirm the published tarball includes the support docs and runnable package contents.
+
+### Scheduled dependency drift check
+
+GitHub Actions runs a bounded, read-only dependency/lockfile validation weekly
+(and can be started manually). It installs exactly the versions in
+`package-lock.json` with `npm ci` and runs `npm run lockfile:check`; it does not
+update dependencies, open pull requests, or publish artifacts. Dependency
+updates remain managed separately by Dependabot.
