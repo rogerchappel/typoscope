@@ -14,6 +14,7 @@ Usage:
   typoscope --help
   typoscope --version
   typoscope audit [package.json] [--json]
+  typoscope audit-lockfile <package-lock.json|pnpm-lock.yaml> [--json]
 
 The first audit pass runs without network access and flags common unscoped typosquatting lookalikes plus risky lifecycle scripts.
 Scoped names remain within their own namespace and are not compared with unscoped packages.`;
@@ -256,6 +257,24 @@ export function auditManifest(manifest, filePath = "package.json") {
   };
 }
 
+export function auditLockfile(lockfile, filePath = "package-lock.json") {
+  if (!isPlainObject(lockfile)) throw new Error("Invalid lockfile: root must be a JSON object.");
+  const findings = [];
+  const packages = lockfile.packages;
+  if (packages !== undefined && !isPlainObject(packages)) throw new Error("Invalid lockfile: packages must be a JSON object.");
+  for (const [location, metadata] of Object.entries(packages ?? {})) {
+    if (!location || location === "" || !location.startsWith("node_modules/")) continue;
+    if (!isPlainObject(metadata)) continue;
+    const name = location.slice("node_modules/".length);
+    if (name.includes("/node_modules/")) continue;
+    if (name.startsWith("@")) continue;
+    const match = popularPackages.find((popular) => popular !== name && distance(name, popular) <= 1);
+    if (match) findings.push({ level: "critical", code: "dependency-lookalike", package: name, section: "lockfile", message: `${name} looks similar to ${match}.` });
+    if (metadata.deprecated) findings.push({ level: "high", code: "deprecated-package", package: name, section: "lockfile", message: `${name} is marked deprecated in the lockfile.` });
+  }
+  return { ok: findings.length === 0, file: path.resolve(filePath), findings };
+}
+
 function readManifest(filePath) {
   try {
     return JSON.parse(readFileSync(filePath, "utf8"));
@@ -287,6 +306,25 @@ export function run(argv = process.argv.slice(2), log = console.log, errorLog = 
   if ((arg === "--version" || arg === "-v") && args.length === 0) {
     log(version);
     return 0;
+  }
+
+  if (arg === "audit-lockfile") {
+    const operands = args.filter((value) => value !== "--json");
+    if (operands.length !== 1 || operands[0].startsWith("-")) {
+      errorLog("typoscope: audit-lockfile requires exactly one lockfile path");
+      return 2;
+    }
+    const filePath = operands[0];
+    let result;
+    try {
+      if (filePath.endsWith(".yaml") || filePath.endsWith(".yml")) throw new Error("pnpm YAML lockfiles are not yet supported; use package-lock.json.");
+      result = auditLockfile(readManifest(filePath), filePath);
+    } catch (error) {
+      errorLog(`typoscope: ${error instanceof Error ? error.message : String(error)}`);
+      return 2;
+    }
+    log(args.includes("--json") ? JSON.stringify(result, null, 2) : formatReport(result));
+    return result.ok ? 0 : 1;
   }
 
   if (arg === "audit") {
