@@ -58,6 +58,15 @@ transposition, while exact catalogue matches remain clean. Scoped names stay
 within their own namespace and are not compared with this unscoped catalogue.
 Each dependency entry produces at most one lookalike finding.
 
+Audit npm v7+ `package-lock.json` files for dependency-name lookalikes and packages marked deprecated by the lockfile metadata:
+
+```sh
+node ./src/index.js audit-lockfile package-lock.json
+node ./src/index.js audit-lockfile package-lock.json --json
+```
+
+This reads the lockfile only, makes no network requests, and returns deterministic findings. pnpm YAML lockfiles are not yet supported.
+
 For CI or agent workflows, emit JSON:
 
 ```sh
