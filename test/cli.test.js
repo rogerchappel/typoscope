@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { describe, it } from "node:test";
 import { promisify } from "node:util";
 import assert from "node:assert/strict";
-import { auditManifest, help, run, version } from "../src/index.js";
+import { auditLockfile, auditManifest, help, run, version } from "../src/index.js";
 
 const execFileAsync = promisify(execFile);
 const cliPath = fileURLToPath(new URL("../src/index.js", import.meta.url));
@@ -19,6 +19,29 @@ async function runCli(args = []) {
 }
 
 describe("typoscope CLI scaffold", () => {
+  it("audits package-lock metadata deterministically", () => {
+    const result = auditLockfile({ packages: {
+      "": {}, "node_modules/lodas": { version: "1.0.0" },
+      "node_modules/old-lib": { deprecated: "Use new-lib" },
+      "node_modules/lodash": { version: "4.17.21" },
+    } }, "package-lock.json");
+    assert.deepEqual(result.findings.map(({ code, package: name }) => [code, name]), [
+      ["dependency-lookalike", "lodas"], ["deprecated-package", "old-lib"],
+    ]);
+  });
+
+  it("supports lockfile audit JSON output", async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), "typoscope-lockfile-"));
+    const lockPath = path.join(dir, "package-lock.json");
+    await writeFile(lockPath, JSON.stringify({ packages: { "node_modules/lodas": { version: "1" } } }));
+    await assert.rejects(runCli(["audit-lockfile", lockPath, "--json"]), (error) => {
+      assert.equal(error.code, 1);
+      const report = JSON.parse(error.stdout);
+      assert.equal(report.findings[0].package, "lodas");
+      assert.equal(report.findings[0].section, "lockfile");
+      return true;
+    });
+  });
   it("prints help text for --help", async () => {
     const { stdout, stderr } = await runCli(["--help"]);
 
