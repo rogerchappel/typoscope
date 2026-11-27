@@ -7,6 +7,14 @@ try {
     throw new Error('package metadata does not match package.json or lockfile structure is invalid');
   }
   const rootPackage = lock.packages[''];
+  const normalizeBin = (bin) => {
+    if (typeof bin === 'string') return { [packageJson.name.split('/').at(-1)]: bin };
+    if (!bin) return {};
+    return Object.fromEntries(Object.entries(bin).map(([name, path]) => [name, path.replace(/^\.\//, '')]));
+  };
+  if (JSON.stringify(normalizeBin(rootPackage.bin)) !== JSON.stringify(normalizeBin(packageJson.bin))) {
+    throw new Error('root bin does not match package.json');
+  }
   for (const section of ['dependencies', 'optionalDependencies', 'devDependencies', 'peerDependencies']) {
     if (JSON.stringify(rootPackage[section] ?? {}) !== JSON.stringify(packageJson[section] ?? {})) {
       throw new Error(`root ${section} does not match package.json`);

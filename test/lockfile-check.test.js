@@ -82,6 +82,28 @@ test('rejects omitted or changed root dependency sections', () => {
   }
 });
 
+test('accepts matching root bin metadata and rejects omitted or changed metadata', () => {
+  const dir = fixture();
+  try {
+    const lockPath = join(dir, 'package-lock.json');
+    const pkg = JSON.parse(readFileSync(join(dir, 'package.json')));
+    const lock = JSON.parse(readFileSync(lockPath));
+    lock.packages[''].bin = { ...pkg.bin };
+    writeFileSync(lockPath, JSON.stringify(lock));
+    assert.equal(check(dir).status, 0);
+
+    for (const bin of [undefined, { typoscope: 'src/other.js' }]) {
+      const changed = JSON.parse(readFileSync(lockPath));
+      if (bin === undefined) delete changed.packages[''].bin;
+      else changed.packages[''].bin = bin;
+      writeFileSync(lockPath, JSON.stringify(changed));
+      const result = check(dir);
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /root bin does not match package\.json/);
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('rejects malformed package entries', () => {
   const dir = fixture();
   try {
